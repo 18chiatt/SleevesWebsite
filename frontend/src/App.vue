@@ -1,11 +1,13 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <img src="@/assets/largeLogo.jpg" title="We ❤ Sleeves!" />
-      <router-link to="/">Browse</router-link>
-      <router-link to="Suggest">Suggest</router-link>
-      <router-link to="Moderate">Moderate</router-link>
-      <router-link to="About">Learn More</router-link>
+    <div class="top">
+      <a href="/"><img src="@/assets/largeLogo.jpg" title="We ❤ Sleeves!"/></a>
+      <div id="nav">
+        <router-link to="/">Browse</router-link>
+        <router-link to="Suggest">Suggest</router-link>
+        <router-link to="Moderate">Moderate</router-link>
+        <router-link to="About">Learn More</router-link>
+      </div>
     </div>
 
     <router-view />
@@ -95,7 +97,7 @@ router-link {
 
 #nav a {
   color: white;
-  font-size: 30px;
+  font-size: 50px;
   width: 100%;
   background-color: #0a80de;
 }
