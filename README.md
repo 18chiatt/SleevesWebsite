@@ -1,4 +1,8 @@
-# sleeves
+# Sleeves Website
+
+## Introduction
+
+>Full stack Sleeves website featuring comments, IP bans, and lots and lots of sleeves.  To Use create "password.txt" in the backend directory and put your password in it.  DO _NOT REUSE THIS PASSWORD_ it is stored in plaintext and can probably be yoinked by people smarter than I am.
 
 ## Project setup
 ```
