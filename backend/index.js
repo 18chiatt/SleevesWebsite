@@ -11,6 +11,11 @@ mongoose.connect('mongodb://localhost/sleeves', {
 
 
 const SECRET_PASSWORD = String(fs.readFileSync("password.txt"));
+
+if (SECRET_PASSWORD.length < 3) {
+  console.log("Unable to fetch password from password.txt");
+  process.exit();
+}
 const maxToReturn = 5;
 
 const gameSchema = new mongoose.Schema({
