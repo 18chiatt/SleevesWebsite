@@ -11,7 +11,7 @@ mongoose.connect('mongodb://localhost/sleeves', {
 
 
 const SECRET_PASSWORD = fs.readFileSync("password.txt");
-const maxToReturn = 20;
+const maxToReturn = 5;
 
 const gameSchema = new mongoose.Schema({
   name: String,
@@ -28,8 +28,7 @@ const sleeveScheme = new mongoose.Schema({
 });
 
 const suggestionScheme = new mongoose.Schema({
-  name: String,
-  sizes: [Object],
+  comment: String,
   suggestedBy: String,
   timeStamp: Number,
   ipAddress: String,
@@ -46,35 +45,51 @@ const Game = mongoose.model("Game", gameSchema);
 
 const db = mongoose.connection;
 
-updateDatabase();
+if (process.argv[2] == "-b") {
+  rebuild();
+} else {
+  console.log("Going with existing database!")
+}
+
+async function rebuild() {
+  console.log("Rebuilding! -- clearing")
+  await clearDB();
+  console.log("CLeared!")
+  await updateDatabase();
+  console.log("Re-created!");
+
+}
 
 
+app.get("/api/Games/:query", async (req, res) => {
 
 
-app.get("/Games/:query", async (req, res) => {
-  console.log(req.ip);
-  console.log(typeof(req.ip));
   var query = req.params.query;
+  console.log("Got query for " + query);
 
   let games = await Game.find({
     name: {
-      $regex: query
+      $regex: query,
+      $options: 'i'
     }
   }).limit(maxToReturn);
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.send(JSON.stringify(games));
 });
 
-app.get("/Sleeves", async (req, res) => {
+app.get("/api/Sleeves", async (req, res) => {
 
-  let games = await Game.find();
+  let games = await Sleeve.find();
   res.send(games);
 });
 
-app.post("/Suggest", async (req, res) => {
-  console.log(req.ip);
-  console.log(req.body);
+app.post("/api/Suggest", async (req, res) => {
+  console.log("Got request for suggest!");
+
+
   let request = req.body;
-  if (!request.name || !request.suggestedBy || !request.sizes) {
+  console.log(request);
+  if (!request.suggestedBy || !request.comment) {
     res.status(400);
     res.json({
       message: "Incomplete request"
@@ -84,16 +99,17 @@ app.post("/Suggest", async (req, res) => {
   request.ipAddress = req.ip;
   request.timeStamp = Math.round(Date.now() / 1000);
   let newSuggestion = new Suggestion(request);
+  console.log(request);
   await newSuggestion.save();
-  let toRespond = await Suggestion.find({
-    _id: newSuggestion._id
+  res.send({
+    message: "Success!, thank you for your submission!"
   });
-  res.send(toRespond);
 
 });
 
 
-app.put("/Manage", async (req, res) => {
+app.put("/api/Manage", async (req, res) => {
+
   let requestBody = req.body;
   if (!requestBody.password || !requestBody.id || !requestBody.approve) {
     res.status(400);
@@ -147,18 +163,17 @@ function getGames() {
 
   let sleevesMap = getSleevesMap()
   let unknownSize = {
-    SKU: "???",
-    width: "???",
-    height: "???",
-    price: "???",
-    link: "???",
-    name: "???",
+    SKU: "",
+    width: "",
+    height: "",
+    price: "",
+    link: "#",
+    name: "Unknown size",
   }
 
   let finishedGames = [];
   for (var game of Object.entries(games)) {
     game = game[1];
-    //console.log(game);
     let newGame = {
       name: game.name,
       sizes: [],
@@ -198,41 +213,36 @@ function getSleevesArray() {
     sleeves.push(ele);
 
   }
-  console.log(sleeves);
   return sleeves;
 }
 
 function updateDatabase() {
-  let needsUpdate = JSON.parse(fs.readFileSync("update.txt"));
-  if (needsUpdate.games != false) {
-    console.log("Updating games!");
-    let games = getGames();
-    for (let game of games) {
-      const currGame = new Game({
-        name: game.name,
-        sizes: game.sizes
-      });
-      currGame.save();
+  let games = getGames();
+  for (let game of games) {
+    const currGame = new Game({
+      name: game.name,
+      sizes: game.sizes
+    });
+    currGame.save();
 
-    }
-    console.log("Finished!");
+  }
+  console.log("Finished!");
 
-  } else {
-    console.log("No need to update games!")
+  console.log("Updating sleeves!");
+  let sleeves = getSleevesArray();
+  for (let sleeve of sleeves) {
+    const currSleeve = new Sleeve(sleeve);
+    currSleeve.save();
   }
 
-  if (needsUpdate.sleeves != false) {
-    console.log("Updating sleeves!");
-    let sleeves = getSleevesArray();
-    for (let sleeve of sleeves) {
-      const currSleeve = new Sleeve(sleeve);
-      currSleeve.save();
-    }
-    Sleeve.find().limit(4).then((out) => {
-      console.log(out);
-    })
 
-  } else {
-    console.log("not updating sleeves!");
-  }
+}
+
+
+
+async function clearDB() {
+  await Suggestion.remove({});
+  await Sleeve.remove({});
+  await Game.remove({});
+
 }
