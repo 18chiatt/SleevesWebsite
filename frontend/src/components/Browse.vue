@@ -1,14 +1,14 @@
 <template lang="html">
   <div class="page">
     <input
-      type="text"
       v-model="query"
       v-on:keyup="getGames()"
       value=""
       placeholder="Search"
+      class="inputBox"
     />
     <div class="Prompt" v-show="games.length === 0">
-      Games will appear here when you type!
+      {{ message }}
     </div>
     <div class="mainContent">
       <div v-for="game in games" :key="game._id" class="gameHolder">
@@ -25,26 +25,43 @@
           >
         </div>
       </div>
+
+      <div
+        class="blanks"
+        v-for="blank in this.numBlanks"
+        v-bind:key="blank"
+      ></div>
     </div>
   </div>
 </template>
 
 <script>
+const numSlots = 5;
 const axios = require("axios").default;
 const URL = "api/Games/";
 export default {
   data: function() {
     return {
       query: "",
-      games: []
+      games: [],
+      message: "Games will appear here when you type"
     };
   },
   methods: {
     getGames: async function() {
-      axios.get(URL + this.query).then(response => {
+      let query = encodeURI(this.query);
+      axios.get(URL + query).then(response => {
         console.log(response.data);
         this.games = response.data;
+        if (this.games.length === 0) {
+          this.message = "Unable to find matching game";
+        }
       });
+    }
+  },
+  computed: {
+    numBlanks: function() {
+      return numSlots - this.games.length;
     }
   }
 };
@@ -52,12 +69,29 @@ export default {
 
 <style lang="css" scoped>
 * {
-  background-color: #cdcdcd;
+  background-color: #2c3e50;
+  color: white;
 }
-.page {
-  width: 100%;
 
-  background-color: #cdcdcd;
+.blanks {
+  height: 100px;
+}
+
+input {
+  color: white;
+  background-color: #0a80de;
+  border: 2px solid #0a80de;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 30px;
+}
+
+::placeholder {
+  color: white;
+}
+
+.page {
+  background-color: #2c3e50;
   padding: 20px;
 }
 .sneaky {
@@ -65,7 +99,6 @@ export default {
 }
 
 .Prompt {
-  height: 600px;
 }
 
 .mainContent {

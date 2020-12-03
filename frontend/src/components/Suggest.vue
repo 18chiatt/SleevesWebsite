@@ -49,8 +49,12 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.thanks {
+  color: white;
+  margin-top: 10px;
+}
 .page {
-  background-color: #cdcdcd;
+  background-color: #2c3e50;
   height: 600px;
 }
 
@@ -61,12 +65,32 @@ export default {
 textarea {
   display: block;
   margin: 0 auto;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #0a80de;
+  color: white;
+}
+
+::placeholder {
+  color: white;
+}
+
+input {
+  background-color: #0a80de;
+  font-size: 20px;
+  height: 30px;
+  margin-top: 10px;
+  border-radius: 5px;
+  padding: 3px;
+  color: white;
 }
 
 button {
   margin-left: 30px;
-  margin-top: 10px;
   height: 30px;
+  background-color: #0a80de;
+  color: white;
+
   width: 100px;
 }
 </style>

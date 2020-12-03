@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Browse from "./../components/Browse.vue"
-import Suggest from "@/components/Suggest.vue"
+import Suggest from "./../components/Suggest.vue"
+import Moderate from "./../components/Moderate.vue"
+import About from "./../components/About.vue"
 
 
 
@@ -16,6 +18,16 @@ const routes = [{
     path: "/Suggest",
     name: "Suggest",
     component: Suggest,
+  },
+  {
+    path: "/Moderate",
+    name: "Moderate",
+    component: Moderate
+  },
+  {
+    path: "/About",
+    name: "About",
+    component: About
   }
 
 

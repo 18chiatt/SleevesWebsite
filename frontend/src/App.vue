@@ -1,11 +1,13 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Home</router-link>
+      <img src="@/assets/largeLogo.jpg" title="We ❤ Sleeves!" />
+      <router-link to="/">Browse</router-link>
       <router-link to="Suggest">Suggest</router-link>
       <router-link to="Moderate">Moderate</router-link>
       <router-link to="About">Learn More</router-link>
     </div>
+
     <router-view />
     <div class="footer">
       <div class="linkContainer">
@@ -31,10 +33,10 @@
 * {
   padding: 0;
   margin: 0;
+  transition: 0.3s;
 }
-
-app {
-  background-color: #cdcdcd;
+img {
+  max-width: 12%;
 }
 #app {
   font-family: "Oswald", sans-serif;
@@ -42,6 +44,8 @@ app {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  background-color: #2c3e50;
+  height: 100%;
 }
 
 router-link {
@@ -52,6 +56,7 @@ router-link {
   width: 100%;
   background-color: #0a80de;
   justify-content: center;
+  border-top: 1px solid black;
 }
 
 .linkContainer {
@@ -85,6 +90,7 @@ router-link {
   background-color: #0a80de;
   display: flex;
   justify-content: space-between;
+  border-bottom: 1px solid black;
 }
 
 #nav a {

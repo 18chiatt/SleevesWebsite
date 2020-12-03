@@ -10,7 +10,7 @@ mongoose.connect('mongodb://localhost/sleeves', {
 });
 
 
-const SECRET_PASSWORD = fs.readFileSync("password.txt");
+const SECRET_PASSWORD = String(fs.readFileSync("password.txt"));
 const maxToReturn = 5;
 
 const gameSchema = new mongoose.Schema({
@@ -34,6 +34,10 @@ const suggestionScheme = new mongoose.Schema({
   ipAddress: String,
 })
 
+const ipBanSchema = new mongoose.Schema({
+  ip: String,
+})
+
 
 
 
@@ -43,12 +47,21 @@ const Sleeve = mongoose.model("Sleeve", sleeveScheme);
 
 const Game = mongoose.model("Game", gameSchema);
 
+const Ban = mongoose.model("Ban", ipBanSchema);
+
 const db = mongoose.connection;
 
-if (process.argv[2] == "-b") {
+if (process.argv.includes("-b")) {
   rebuild();
 } else {
   console.log("Going with existing database!")
+}
+
+if (process.argv.includes("u")) {
+  console.log("unbanning all users!");
+  Ban.deleteMany({})
+} else {
+  console.log("Leaving bans in place");
 }
 
 async function rebuild() {
@@ -65,6 +78,8 @@ app.get("/api/Games/:query", async (req, res) => {
 
 
   var query = req.params.query;
+  query = decodeURI(query);
+  query = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   console.log("Got query for " + query);
 
   let games = await Game.find({
@@ -97,21 +112,52 @@ app.post("/api/Suggest", async (req, res) => {
     return;
   }
   request.ipAddress = req.ip;
-  request.timeStamp = Math.round(Date.now() / 1000);
+  request.timeStamp = new Date() / 1000;
+
+  let banned = await Ban.exists({
+    ip: request.ipAddress
+  });
+  if (banned) {
+    res.json({
+      message: "You have been banned from the service"
+    });
+    return;
+  }
   let newSuggestion = new Suggestion(request);
   console.log(request);
   await newSuggestion.save();
   res.send({
-    message: "Success!, thank you for your submission!"
+    message: "Success! Thank you for your submission!"
   });
 
 });
+
+app.get("/api/Manage/:password", async (req, res) => {
+  console.log("Got api request!");
+
+  let password = String(req.params.password)
+  console.log(SECRET_PASSWORD);
+  console.log(password);
+
+  if (password != SECRET_PASSWORD) {
+    res.json({
+      message: "Incorrect password"
+    })
+    return;
+  }
+  let response = await Suggestion.find().limit(10);
+  let toReturn = {}
+  toReturn.data = response;
+  toReturn.message = "Correct Password";
+  res.send(toReturn);
+
+})
 
 
 app.put("/api/Manage", async (req, res) => {
 
   let requestBody = req.body;
-  if (!requestBody.password || !requestBody.id || !requestBody.approve) {
+  if (!requestBody.password || !requestBody.id) {
     res.status(400);
     res.json({
       message: "Incomplete request"
@@ -123,24 +169,73 @@ app.put("/api/Manage", async (req, res) => {
       message: "Incorrect password"
     });
   }
-  if (requestBody.approve == false) {
-    let response = await Suggestion.deleteOne({
-      _id: requestBody.id
-    });
-    console.log(response);
-    console.log("Finish me, return positive resopnse!");
-    res.send({
-      message: "Success!"
-    });
-  } else {
-    let query = await Suggestion.findById(requestBody.id);
-    let toPush = new Game(query);
-    toPush.save();
-    console.log("Approved game suggested by " + query.suggestedBy);
-    console.log("Approval took " + (Date.now() / 1000 - query.timeStamp) / 86400 + " days");
-    res.send(toPush);
-  }
+
+  let response = await Suggestion.deleteOne({
+    _id: requestBody.id
+  });
+  console.log(response);
+  console.log("Finish me, return positive resopnse!");
+  res.send({
+    message: "Success!"
+  });
+
 })
+
+app.put("/api/Manage/Ban", async (req, res) => {
+
+  let requestBody = req.body;
+  if (!requestBody.password || !requestBody.id) {
+    res.status(400);
+    res.json({
+      message: "Incomplete request"
+    });
+  }
+  if (requestBody.password != SECRET_PASSWORD) {
+    res.status(400);
+    res.json({
+      message: "Incorrect password"
+    });
+  }
+
+  let commenterToBan = await Suggestion.findOne({
+    _id: requestBody.id
+  })
+  let ip = commenterToBan.ipAddress;
+  let newBan = new Ban({
+    ip: ip
+  });
+  await newBan.save();
+  await Suggestion.deleteMany({
+    ipAddress: ip
+  });
+  res.send({
+    message: "User with ip" + ip + " was banned successfully"
+  })
+
+})
+
+app.delete("/api/Manage",
+  async (req, res) => {
+    let requestBody = req.body;
+    if (!requestBody.password) {
+      res.status(400);
+      res.send({
+        message: "Incomplete request"
+      });
+      return;
+    }
+    if (requestBody.password != SECRET_PASSWORD) {
+      res.status(400);
+      res.send({
+        message: "Incorrect password"
+      });
+    }
+    await Suggestion.remove({});
+    res.status(200)
+    res.send({
+      message: "Removed all suggestions"
+    });
+  })
 
 
 
