@@ -12,10 +12,7 @@ mongoose.connect('mongodb://localhost/sleeves', {
 
 const SECRET_PASSWORD = String(fs.readFileSync("password.txt"));
 
-if (SECRET_PASSWORD.length < 3) {
-  console.log("Unable to fetch password from password.txt");
-  process.exit();
-}
+
 const maxToReturn = 5;
 
 const gameSchema = new mongoose.Schema({
@@ -60,7 +57,10 @@ if (process.argv.includes("-b")) {
   rebuild();
 } else {
   console.log("Going with existing database!")
+  ensureCorrectness();
 }
+
+
 
 if (process.argv.includes("u")) {
   console.log("unbanning all users!");
@@ -69,12 +69,29 @@ if (process.argv.includes("u")) {
   console.log("Leaving bans in place");
 }
 
+if (SECRET_PASSWORD.length < 3) {
+  console.log("Unable to fetch password from password.txt");
+  process.exit();
+}
+
 async function rebuild() {
   console.log("Rebuilding! -- clearing")
   await clearDB();
   console.log("CLeared!")
   await updateDatabase();
   console.log("Re-created!");
+
+}
+
+async function ensureCorrectness() {
+  let numGames = await Game.count();
+  let numSleeves = await Sleeve.count();
+  if (numGames < 4 || numSleeves < 4) {
+    console.log("ERROR Database not working");
+    process.exit();
+  } else {
+    console.log("Database working, Games: " + numGames + " and Sleeves: " + numSleeves);
+  }
 
 }
 
