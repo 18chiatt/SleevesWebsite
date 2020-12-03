@@ -126,7 +126,7 @@ export default {
 }
 
 .blank {
-  height: 100px;
+  height: 20%;
 }
 
 .button1 {

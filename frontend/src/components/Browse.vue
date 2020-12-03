@@ -74,7 +74,7 @@ export default {
 }
 
 .blanks {
-  height: 100px;
+  height: 20%;
 }
 
 input {
