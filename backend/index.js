@@ -10,7 +10,8 @@ mongoose.connect('mongodb://localhost/sleeves', {
 });
 
 
-const SECRET_PASSWORD = String(fs.readFileSync("password.txt"));
+const SECRET_PASSWORD = JSON.parse(String(fs.readFileSync("password.txt"))).password;
+console.log(SECRET_PASSWORD)
 
 
 const maxToReturn = 5;
