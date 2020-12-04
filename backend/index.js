@@ -65,7 +65,9 @@ if (process.argv.includes("-b")) {
 
 if (process.argv.includes("u")) {
   console.log("unbanning all users!");
-  Ban.deleteMany({})
+  Ban.deleteMany({}).then(function() {
+    console.log("Unbanned!");
+  })
 } else {
   console.log("Leaving bans in place");
 }
@@ -142,7 +144,7 @@ app.post("/api/Suggest", async (req, res) => {
   });
   if (banned) {
     res.json({
-      message: "You have been banned from the service"
+      message: "The service is in lockdown, comments are unavailable until further notice"
     });
     return;
   }
@@ -204,10 +206,36 @@ app.put("/api/Manage", async (req, res) => {
 
 })
 
+app.put("/api/Manage/unBan", async (req, res) => {
+  let requestBody = req.body;
+  if (!requestBody.password) {
+    res.send({
+      message: "Invalid request"
+    })
+    return;
+  }
+
+  if (requestBody.password != SECRET_PASSWORD) {
+    res.send({
+      message: "Incorrect password"
+    })
+    return;
+  }
+
+  Ban.deleteMany({}).then(function() {
+    console.log("Unbanned!");
+  })
+  res.send({
+    message: "Lockdown has ended"
+  });
+
+
+})
+
 app.put("/api/Manage/Ban", async (req, res) => {
 
   let requestBody = req.body;
-  if (!requestBody.password || !requestBody.id) {
+  if (!requestBody.password) {
     res.status(400);
     res.json({
       message: "Incomplete request"
@@ -232,7 +260,7 @@ app.put("/api/Manage/Ban", async (req, res) => {
     ipAddress: ip
   });
   res.send({
-    message: "User with ip" + ip + " was banned successfully"
+    message: "Service is now in LOCKDOWN"
   })
 
 })

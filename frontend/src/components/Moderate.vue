@@ -12,6 +12,10 @@
       <button v-on:click="fetchComments()" class="button1">
         Fetch Comments
       </button>
+      <button type="button" v-on:click="banUser()" class="button1">
+        Lockdown Service
+      </button>
+      <button v-on:click="endLockdown()" class="button1">End Lockdown</button>
     </div>
 
     <div class="messageDisplay">{{ message }}</div>
@@ -30,13 +34,6 @@
           >
             Clear
           </button>
-          <button
-            type="button"
-            class="badButton"
-            v-on:click="banUser(comment._id)"
-          >
-            Ban User
-          </button>
         </div>
       </div>
 
@@ -48,6 +45,7 @@
 <script>
 const fetchURL = "/api/Manage/";
 const banURL = "/api/Manage/Ban";
+const unLockdown = "/api/Manage/unBan";
 const axios = require("axios");
 const moment = require("moment");
 const sizeUnits = 5;
@@ -80,6 +78,10 @@ export default {
 
       console.log(response);
     },
+    async endLockdown() {
+      let response = await axios.put(unLockdown, { password: this.password });
+      this.message = response.message;
+    },
     async clearSuggestion(id) {
       let response = await axios.put(fetchURL, {
         id: id,
@@ -88,10 +90,9 @@ export default {
       console.log(response);
       this.fetchComments();
     },
-    async banUser(id) {
+    async banUser() {
       let response = await axios.put(banURL, {
-        password: this.password,
-        id: id
+        password: this.password
       });
       this.message = response.data.message;
       this.fetchComments();
@@ -171,7 +172,7 @@ export default {
   align-self: flex-end;
 }
 .controls button {
-  height: 30px;
+  height: 60px;
   width: 90%;
   margin: 10px;
   background-color: #0a80de;
